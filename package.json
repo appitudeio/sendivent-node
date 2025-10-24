@@ -1,0 +1,35 @@
+{
+  "name": "@sendivent/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript/JavaScript SDK for Sendivent - Multi-channel notification platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "sendivent",
+    "notifications",
+    "email",
+    "sms",
+    "slack",
+    "typescript"
+  ],
+  "author": "Sendivent",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sendivent/sdk-node.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

@@ -1,2 +1,2 @@
 export { Sendivent } from './Sendivent';
-export type { Channel, Contact, SendResponse, SendEventOptions } from './types';
+export type { SendResponse } from './types';

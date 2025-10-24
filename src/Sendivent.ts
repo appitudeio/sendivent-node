@@ -1,12 +1,12 @@
-import type { Channel, Contact, SendResponse } from './types';
+import type { SendResponse } from './types';
 
 export class Sendivent {
   private baseUrl: string;
   private apiKey: string;
   private event: string;
-  private _to?: string | Contact | Array<string | Contact>;
+  private _to?: string | Record<string, unknown> | Array<string | Record<string, unknown>>;
   private _payload: Record<string, unknown> = {};
-  private _channel?: Channel;
+  private _channel?: string;
   private _language?: string;
   private _overrides: Record<string, unknown> = {};
   private _idempotencyKey?: string;
@@ -23,7 +23,7 @@ export class Sendivent {
       : 'https://api-sandbox.sendivent.com';
   }
 
-  to(recipient: string | Contact | Array<string | Contact>): this {
+  to(recipient: string | Record<string, unknown> | Array<string | Record<string, unknown>>): this {
     this._to = recipient;
     return this;
   }
@@ -33,7 +33,7 @@ export class Sendivent {
     return this;
   }
 
-  channel(channel: Channel): this {
+  channel(channel: string): this {
     this._channel = channel;
     return this;
   }

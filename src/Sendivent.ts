@@ -1,4 +1,5 @@
-import type { Contact, SendResponse } from './types';
+import type { Contact } from './types';
+import { SendResponse } from './types';
 
 export class Sendivent {
   private baseUrl: string;
@@ -102,7 +103,7 @@ export class Sendivent {
         );
       }
 
-      return data as SendResponse;
+      return SendResponse.from(data);
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Sendivent API request failed: ${error.message}`);

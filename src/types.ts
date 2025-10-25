@@ -18,9 +18,40 @@ export interface Contact {
 /**
  * Response from Sendivent API
  */
-export interface SendResponse {
-  success: boolean;
-  data?: Array<Record<string, string | boolean>>;  // [{ "email": "uuid" }, { "listener": true }]
-  error?: string;
-  message?: string;
+export class SendResponse {
+  constructor(
+    public readonly success: boolean,
+    public readonly data?: Array<Record<string, string | boolean>>,
+    public readonly error?: string,
+    public readonly message?: string
+  ) {}
+
+  static from(data: any): SendResponse {
+    return new SendResponse(
+      data.success,
+      data.data,
+      data.error,
+      data.message
+    );
+  }
+
+  isSuccess(): boolean {
+    return this.success;
+  }
+
+  hasError(): boolean {
+    return this.error !== undefined;
+  }
+
+  toJson(): string {
+    return JSON.stringify(this);
+  }
+
+  toObject(): Record<string, any> {
+    const obj: Record<string, any> = { success: this.success };
+    if (this.data !== undefined) obj.data = this.data;
+    if (this.error !== undefined) obj.error = this.error;
+    if (this.message !== undefined) obj.message = this.message;
+    return obj;
+  }
 }

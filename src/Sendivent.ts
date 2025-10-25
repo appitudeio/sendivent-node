@@ -4,7 +4,7 @@ import { SendResponse } from './types';
 export class Sendivent {
   private baseUrl: string;
   private apiKey: string;
-  private event: string;
+  private _event?: string;
   private _to?: string | Contact | Array<string | Contact>;
   private _payload: Record<string, unknown> = {};
   private _channel?: string;
@@ -12,16 +12,20 @@ export class Sendivent {
   private _overrides: Record<string, unknown> = {};
   private _idempotencyKey?: string;
 
-  constructor(apiKey: string, event: string) {
+  constructor(apiKey: string) {
     if (!apiKey.match(/^(test_|live_)/)) {
       throw new Error("API key must start with 'test_' or 'live_'");
     }
 
     this.apiKey = apiKey;
-    this.event = event;
     this.baseUrl = apiKey.startsWith('live_')
       ? 'https://api.sendivent.com'
       : 'https://api-sandbox.sendivent.com';
+  }
+
+  event(event: string): this {
+    this._event = event;
+    return this;
   }
 
   to(recipient: string | Contact | Array<string | Contact>): this {
@@ -55,7 +59,11 @@ export class Sendivent {
   }
 
   async send(): Promise<SendResponse> {
-    let endpoint = `send/${this.event}`;
+    if (!this._event) {
+      throw new Error('Event name must be set using event() method');
+    }
+
+    let endpoint = `send/${this._event}`;
     if (this._channel) {
       endpoint += `/${this._channel}`;
     }

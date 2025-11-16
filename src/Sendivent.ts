@@ -2,10 +2,16 @@ import type { Contact } from './types';
 import { SendResponse } from './types';
 
 export class Sendivent {
+  private static readonly API_URLS = {
+    sandbox: 'https://api-sandbox.sendivent.com',
+    production: 'https://api.sendivent.com'
+  } as const;
+
   private baseUrl: string;
   private apiKey: string;
   private _event?: string;
   private _to?: string | Contact | Array<string | Contact>;
+  private _from?: string | Contact;
   private _payload: Record<string, unknown> = {};
   private _channel?: string;
   private _language?: string;
@@ -19,8 +25,8 @@ export class Sendivent {
 
     this.apiKey = apiKey;
     this.baseUrl = apiKey.startsWith('live_')
-      ? 'https://api.sendivent.com'
-      : 'https://api-sandbox.sendivent.com';
+      ? Sendivent.API_URLS.production
+      : Sendivent.API_URLS.sandbox;
   }
 
   event(event: string): this {
@@ -30,6 +36,11 @@ export class Sendivent {
 
   to(recipient: string | Contact | Array<string | Contact>): this {
     this._to = recipient;
+    return this;
+  }
+
+  from(sender: string | Contact): this {
+    this._from = sender;
     return this;
   }
 
@@ -74,6 +85,10 @@ export class Sendivent {
 
     if (this._to !== undefined) {
       body.to = this._to;
+    }
+
+    if (this._from !== undefined) {
+      body.from = this._from;
     }
 
     if (this._language) {

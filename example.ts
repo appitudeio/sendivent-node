@@ -1,252 +1,263 @@
 /**
- * Sendivent Node.js/TypeScript SDK - Comprehensive Example
+ * Sendivent Node.js/TypeScript SDK - Focused Examples
  *
- * This file demonstrates all SDK features with practical, working examples.
- * Replace 'test_your_api_key_here' with your actual API key to run.
+ * Demonstrates real-world use cases for multi-channel notifications
+ * Run with: npx tsx example.ts
  */
 
-import { Sendivent, Contact, SendResponse } from '@sendivent/sdk';
+import { Sendivent, type Contact } from '@sendivent/sdk';
 
-// ============================================================================
-// BASIC USAGE
-// ============================================================================
+// Initialize with your API key (test_ for sandbox, live_ for production)
+const sendivent = new Sendivent('test_your_api_key_here');
 
-// The SDK is per-event: create one instance per event type
-// Constructor: new Sendivent(apiKey, eventName)
-// API key prefix determines environment: test_* = sandbox, live_* = production
+// =============================================================================
+// EXAMPLE 1: Smart Pattern Detection
+// =============================================================================
+console.log('1. Smart Pattern Detection');
 
-const welcome = new Sendivent('test_your_api_key_here', 'welcome');
-
-// Simple send to an email address
-await welcome
+// Email - automatically detected
+await sendivent
+  .event('welcome')
   .to('user@example.com')
-  .payload({ name: 'John Doe', company: 'Acme Corp' })
+  .payload({ name: 'John Doe' })
   .send();
 
-// ============================================================================
-// RESPONSE HANDLING
-// ============================================================================
-
-// The send() method returns a Promise<SendResponse> with helper methods
-const response: SendResponse = await welcome
-  .to('jane@example.com')
-  .payload({ name: 'Jane Smith' })
-  .send();
-
-// Check success/error using helper methods
-if (response.isSuccess()) {
-  console.log('✓ Notification sent successfully!');
-  console.log('Queue IDs:', response.data);
-} else {
-  console.error('✗ Error:', response.error);
-}
-
-// Access response properties directly (all readonly)
-console.log('Success:', response.success);
-console.log('Message:', response.message);
-
-// Convert to object or JSON
-const responseObject = response.toObject();
-const responseJson = response.toJson();
-
-// ============================================================================
-// FIRE-AND-FORGET
-// ============================================================================
-
-// For background sending without waiting for the response
-// Just don't await the promise - it will resolve in background
-welcome
-  .to('background@example.com')
-  .payload({ name: 'Background User' })
-  .send()
-  .catch(err => console.error('Background send failed:', err));
-
-// Continue with other work immediately...
-console.log('Async send initiated, continuing with other work...');
-
-// ============================================================================
-// CONTACT OBJECTS
-// ============================================================================
-
-// The 'id' field represents your application's user ID
-// You can pass your existing user objects directly - Sendivent maps them internally
-const contact: Contact = {
-  id: 'user-12345',              // Your application's user ID
-  email: 'user@example.com',
-  phone: '+1234567890',
-  name: 'John Doe',
-  avatar: 'https://example.com/avatar.jpg',
-  meta: {
-    tier: 'premium',
-    department: 'Engineering'
-  }
-};
-
-await welcome
-  .to(contact)
-  .payload({ message: 'Welcome to our platform!' })
-  .send();
-
-// ============================================================================
-// MULTIPLE RECIPIENTS
-// ============================================================================
-
-// Send to multiple recipients in one call
-// Mix strings and contact objects in an array
-const newsletter = new Sendivent('test_your_api_key_here', 'newsletter');
-
-await newsletter
-  .to([
-    'user1@example.com',
-    'user2@example.com',
-    { id: 'user-456', email: 'user3@example.com', name: 'User Three' }
-  ])
-  .payload({ subject: 'Monthly Newsletter', edition: 'May 2024' })
-  .send();
-
-// ============================================================================
-// CHANNEL-SPECIFIC SENDING
-// ============================================================================
-
-// Force a specific channel (email, sms, slack, push)
-// Useful when you want to override the default channel selection
-
-const passwordReset = new Sendivent('test_your_api_key_here', 'password-reset');
-await passwordReset
-  .channel('email')
-  .to('user@example.com')
-  .payload({ reset_link: 'https://example.com/reset/abc123' })
-  .send();
-
-// SMS example
-const verification = new Sendivent('test_your_api_key_here', 'verification-code');
-await verification
-  .channel('sms')
+// Phone - automatically detected
+await sendivent
+  .event('verification-code')
   .to('+1234567890')
   .payload({ code: '123456' })
   .send();
 
-// ============================================================================
-// TEMPLATE OVERRIDES
-// ============================================================================
+// Slack User ID - automatically detected
+await sendivent
+  .event('dm-notification')
+  .to('U12345ABCDE')
+  .payload({ message: 'You have a new message' })
+  .send();
 
-// Override template defaults like subject, sender, etc. on a per-request basis
-const invoice = new Sendivent('test_your_api_key_here', 'invoice');
+// =============================================================================
+// EXAMPLE 2: Rich Contact Objects (CRM Tracking)
+// =============================================================================
+console.log('\n2. Rich Contact Objects');
 
-await invoice
-  .to('customer@example.com')
-  .payload({ amount: 100, invoice_id: 'INV-001' })
-  .overrides({
-    subject: 'Your Custom Invoice Subject',
-    from_email: 'billing@company.com',
-    from_name: 'Billing Department',
-    reply_to: 'support@company.com'
+// Pass your user object directly - 'id' maps to external_id in Sendivent
+await sendivent
+  .event('order-confirmation')
+  .to({
+    id: 'user-12345',              // Your application's user ID
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    name: 'Jane Smith',
+    avatar: 'https://example.com/avatar.jpg',
+    meta: {
+      tier: 'premium',
+      timezone: 'America/New_York'
+    }
+  } as Contact)
+  .payload({
+    order_id: 'ORD-98765',
+    total: 99.99,
+    items: [
+      { name: 'Product A', qty: 2 },
+      { name: 'Product B', qty: 1 }
+    ]
   })
   .send();
 
-// ============================================================================
-// IDEMPOTENCY
-// ============================================================================
+// =============================================================================
+// EXAMPLE 3: Broadcast Mode (Event Listeners)
+// =============================================================================
+console.log('\n3. Broadcast Mode');
 
-// Prevent duplicate sends using idempotency keys
-// The API caches responses for 24 hours based on the key
-const orderConfirmation = new Sendivent('test_your_api_key_here', 'order-confirmation');
-
-await orderConfirmation
-  .to('customer@example.com')
-  .payload({ order_id: '12345', total: 99.99 })
-  .idempotencyKey('order-12345-confirmation')
-  .send();
-
-// Sending again with same key returns cached response without re-sending
-await orderConfirmation
-  .to('customer@example.com')
-  .payload({ order_id: '12345', total: 99.99 })
-  .idempotencyKey('order-12345-confirmation')
-  .send(); // Returns cached response, no duplicate sent
-
-// ============================================================================
-// LANGUAGE SELECTION
-// ============================================================================
-
-// Send notifications in different languages (if your templates support it)
-await welcome
-  .to('user@example.com')
-  .payload({ name: 'Anders Andersson' })
-  .language('sv')  // Swedish
-  .send();
-
-// ============================================================================
-// BROADCAST EVENTS
-// ============================================================================
-
-// Send to configured event listeners without specifying recipients
-// The 'to' parameter is optional - omit it to broadcast to event subscribers
-const systemAlert = new Sendivent('test_your_api_key_here', 'system-alert');
-
-await systemAlert
+// Send to all configured event listeners (no recipients specified)
+await sendivent
+  .event('system-alert')
   .payload({
     severity: 'high',
-    message: 'Database backup completed successfully',
-    timestamp: new Date().toISOString()
+    message: 'Database backup completed',
+    timestamp: Date.now()
   })
-  .send(); // Note: no .to() call
+  .send();
 
-// ============================================================================
-// MULTIPLE EVENTS WITH REUSABLE INSTANCES
-// ============================================================================
+// =============================================================================
+// EXAMPLE 4: Slack Channel Broadcasting (No Contact Created)
+// =============================================================================
+console.log('\n4. Slack Channel Broadcasting');
 
-// Create instances for different event types and reuse them
-const orderEvents = new Sendivent('test_your_api_key_here', 'order-placed');
-const paymentEvents = new Sendivent('test_your_api_key_here', 'payment-received');
+// Broadcast to Slack channel - doesn't create a contact in CRM
+await sendivent
+  .event('team-announcement')
+  .channel('slack')
+  .to('#general')  // Channel name
+  .payload({
+    title: 'Weekly Update',
+    message: 'New features released this week!'
+  })
+  .send();
 
-// Send order notification
-await orderEvents
+// Or use channel ID
+await sendivent
+  .event('team-announcement')
+  .channel('slack')
+  .to('C01234ABCDE')  // Channel ID
+  .payload({
+    title: 'Weekly Update',
+    message: 'New features released!'
+  })
+  .send();
+
+// =============================================================================
+// EXAMPLE 5: Channel-Specific Sending
+// =============================================================================
+console.log('\n5. Channel-Specific Sending');
+
+// Force SMS even if event supports multiple channels
+await sendivent
+  .event('urgent-alert')
+  .channel('sms')
+  .to('+1234567890')
+  .payload({ alert: 'Your account requires attention' })
+  .send();
+
+// Force Email
+await sendivent
+  .event('monthly-report')
+  .channel('email')
+  .to('manager@example.com')
+  .payload({
+    month: 'January',
+    revenue: 125000,
+    growth: 15.5
+  })
+  .send();
+
+// =============================================================================
+// EXAMPLE 6: Multiple Recipients (Bulk Sending)
+// =============================================================================
+console.log('\n6. Multiple Recipients');
+
+await sendivent
+  .event('newsletter')
+  .to([
+    'subscriber1@example.com',
+    'subscriber2@example.com',
+    { email: 'vip@example.com', name: 'VIP Customer', meta: { tier: 'platinum' } }
+  ])
+  .payload({
+    subject: 'Monthly Newsletter',
+    featured_article: 'Top 10 Features You Might Have Missed'
+  })
+  .send();
+
+// =============================================================================
+// EXAMPLE 7: Language Selection
+// =============================================================================
+console.log('\n7. Language Selection');
+
+// Send in Swedish
+await sendivent
+  .event('welcome')
+  .to('anders@example.com')
+  .payload({ name: 'Anders' })
+  .language('sv')
+  .send();
+
+// Send in Spanish
+await sendivent
+  .event('password-reset')
+  .to('maria@example.com')
+  .payload({ reset_link: 'https://app.example.com/reset/xyz' })
+  .language('es')
+  .send();
+
+// =============================================================================
+// EXAMPLE 8: Template Overrides
+// =============================================================================
+console.log('\n8. Template Overrides');
+
+// Override subject and sender for this specific send
+await sendivent
+  .event('invoice')
   .to('customer@example.com')
-  .payload({ order_id: 'ORD-001', items: 3 })
+  .payload({
+    invoice_number: 'INV-2024-001',
+    amount: 499.99
+  })
+  .overrides({
+    subject: 'URGENT: Invoice Due',
+    from_email: 'billing@example.com',
+    from_name: 'Billing Department'
+  })
   .send();
 
-// Send payment notification (different event, different instance)
-await paymentEvents
+// =============================================================================
+// EXAMPLE 9: Idempotency (Prevent Duplicate Sends)
+// =============================================================================
+console.log('\n9. Idempotency');
+
+// Use idempotency key to prevent duplicate sends
+const orderId = 'ORD-12345';
+
+await sendivent
+  .event('order-confirmation')
   .to('customer@example.com')
-  .payload({ amount: 150.00, order_id: 'ORD-001' })
+  .payload({
+    order_id: orderId,
+    total: 299.99
+  })
+  .idempotencyKey(`order-${orderId}-confirmation`)
   .send();
 
-// Reuse the same instance for another order
-await orderEvents
-  .to('another@example.com')
-  .payload({ order_id: 'ORD-002', items: 5 })
+// If called again with same key within TTL, won't send duplicate
+await sendivent
+  .event('order-confirmation')
+  .to('customer@example.com')
+  .payload({
+    order_id: orderId,
+    total: 299.99
+  })
+  .idempotencyKey(`order-${orderId}-confirmation`)  // Same key = no duplicate
   .send();
 
-// ============================================================================
-// ERROR HANDLING
-// ============================================================================
+// =============================================================================
+// EXAMPLE 10: Error Handling
+// =============================================================================
+console.log('\n10. Error Handling');
 
 try {
-  // Invalid API key format throws Error
-  const invalid = new Sendivent('invalid_key', 'test-event');
-} catch (error) {
-  if (error instanceof Error) {
-    console.error('Invalid API key format:', error.message);
-  }
-}
-
-try {
-  const test = new Sendivent('test_your_api_key_here', 'test-event');
-
-  const testResponse = await test
-    .to('user@example.com')
-    .payload({ test: 'data' })
+  const response = await sendivent
+    .event('test-event')
+    .to('test@example.com')
+    .payload({ test: true })
     .send();
 
-  // Always check response success
-  if (testResponse.hasError()) {
-    console.error('Error occurred:', testResponse.error);
+  if (response.isSuccess()) {
+    console.log('✓ Success! Queue IDs:', response.data);
+  } else {
+    console.log('✗ Failed:', response.error);
   }
-
 } catch (error) {
-  // API request failures throw Error
-  if (error instanceof Error) {
-    console.error('API error:', error.message);
-  }
+  console.log('✗ Exception:', error);
 }
+
+// =============================================================================
+// EXAMPLE 11: Smart Fallback (Priority-Based Channel Selection)
+// =============================================================================
+console.log('\n11. Smart Fallback');
+
+// Contact has no email but has Slack ID
+// Event configured for email+slack
+// System automatically sends via Slack (priority fallback)
+await sendivent
+  .event('notification')
+  .to({
+    id: 'user-789',
+    slack_id: 'U98765ZYXWV',  // Has Slack
+    // No email - will automatically use Slack
+    name: 'Bob'
+  } as Contact)
+  .payload({ message: 'Your report is ready' })
+  .send();
+
+console.log('\n✓ All examples completed!');

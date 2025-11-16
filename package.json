@@ -1,6 +1,6 @@
 {
   "name": "@sendivent/sdk",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Official TypeScript/JavaScript SDK for Sendivent - Multi-channel notification platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

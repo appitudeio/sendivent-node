@@ -74,7 +74,7 @@ export class Sendivent {
       throw new Error('Event name must be set using event() method');
     }
 
-    let endpoint = `send/${this._event}`;
+    let endpoint = `v1/send/${this._event}`;
     if (this._channel) {
       endpoint += `/${this._channel}`;
     }

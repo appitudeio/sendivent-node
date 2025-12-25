@@ -29,7 +29,7 @@ export class SendResponse {
   static from(data: any): SendResponse {
     return new SendResponse(
       data.success,
-      data.data,
+      data.deliveries,
       data.error,
       data.message
     );

@@ -99,6 +99,10 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Upgrade npm for OIDC support
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         if: steps.check_tag.outputs.exists == 'false'
         run: npm install

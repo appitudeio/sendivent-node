@@ -1,6 +1,6 @@
 {
   "name": "@appitude/sendivent",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Official TypeScript/JavaScript SDK for Sendivent - Multi-channel notification platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

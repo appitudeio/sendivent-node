@@ -117,12 +117,10 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.check_tag.outputs.exists == 'false'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          release_name: Sendivent Node SDK ${{ steps.version.outputs.version }}
+          name: Sendivent Node SDK ${{ steps.version.outputs.version }}
           body_path: release_notes.md
           draft: false
           prerelease: false

@@ -139,8 +139,21 @@ await sendivent
   .to('user@example.com')
   .payload({ amount: 100 })
   .overrides({
-    subject: 'Custom Subject',
-    from_email: 'billing@company.com'
+    email: {
+      subject: 'Custom Subject',
+      reply_to: 'billing@company.com'
+    }
+  })
+  .send();
+```
+
+### Brand Overrides
+
+```typescript
+await sendivent
+  .to('user@example.com')
+  .overrides({
+    brand: { logotype: 'https://example.fi/logo.png' }
   })
   .send();
 ```

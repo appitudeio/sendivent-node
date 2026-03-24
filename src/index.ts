@@ -1,2 +1,3 @@
 export { Sendivent } from './Sendivent';
-export type { Contact, SendResponse } from './types';
+export { Contacts } from './Contacts';
+export type { Contact, ContactData, ContactResponse, SendResponse } from './types';

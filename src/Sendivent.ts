@@ -1,5 +1,6 @@
 import type { Contact } from './types';
 import { SendResponse } from './types';
+import { Contacts } from './Contacts';
 
 export class Sendivent {
   private static readonly API_URLS = {
@@ -17,6 +18,7 @@ export class Sendivent {
   private _language?: string;
   private _overrides: Record<string, unknown> = {};
   private _idempotencyKey?: string;
+  private _contacts?: Contacts;
 
   constructor(apiKey: string) {
     if (!apiKey.match(/^(test_|live_)/)) {
@@ -27,6 +29,16 @@ export class Sendivent {
     this.baseUrl = apiKey.startsWith('live_')
       ? Sendivent.API_URLS.production
       : Sendivent.API_URLS.sandbox;
+  }
+
+  /**
+   * Access the Contacts API for managing contacts and push tokens
+   */
+  get contacts(): Contacts {
+    if (!this._contacts) {
+      this._contacts = new Contacts(this.baseUrl, this.apiKey);
+    }
+    return this._contacts;
   }
 
   event(event: string): this {

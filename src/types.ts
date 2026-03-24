@@ -16,6 +16,30 @@ export interface Contact {
 }
 
 /**
+ * Data for creating or updating a contact
+ */
+export interface ContactData {
+  id?: string;              // Your application's user ID (maps to external_id)
+  name?: string;            // Display name
+  avatar?: string;          // Avatar URL
+  email?: string;           // Email address
+  phone?: string;           // Phone number
+  slack?: string;           // Slack user ID
+  push_token?: string;      // Single push token (convenience alias)
+  push_tokens?: string[];   // Multiple push tokens
+  meta?: Record<string, unknown>;  // Custom metadata
+  [key: string]: unknown;   // Extensibility
+}
+
+/**
+ * Response from Contacts API
+ */
+export interface ContactResponse {
+  success: boolean;
+  contact: Contact;
+}
+
+/**
  * Response from Sendivent API
  *
  * Passes through the raw API response without reshaping.

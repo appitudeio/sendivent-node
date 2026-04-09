@@ -1,7 +1,7 @@
 /**
  * Contact object for identifying recipients
  *
- * Channel identifiers (email, phone, slack_id, etc.) are used to route messages.
+ * Channel identifiers (email, phone, slack, etc.) are used to route messages.
  * You can include multiple identifiers - backend will use the appropriate one per channel.
  */
 export interface Contact {
@@ -10,9 +10,33 @@ export interface Contact {
   avatar?: string;          // Avatar URL
   email?: string;           // Email address
   phone?: string;           // Phone number
-  slack_id?: string;        // Slack user ID
+  slack?: string;           // Slack user ID
   meta?: Record<string, unknown>;  // Custom metadata
   [key: string]: unknown;   // Extensibility for future channel identifiers
+}
+
+/**
+ * Data for creating or updating a contact
+ */
+export interface ContactData {
+  id?: string;              // Your application's user ID (maps to external_id)
+  name?: string;            // Display name
+  avatar?: string;          // Avatar URL
+  email?: string;           // Email address
+  phone?: string;           // Phone number
+  slack?: string;           // Slack user ID
+  push_token?: string;      // Single push token (convenience alias)
+  push_tokens?: string[];   // Multiple push tokens
+  meta?: Record<string, unknown>;  // Custom metadata
+  [key: string]: unknown;   // Extensibility
+}
+
+/**
+ * Response from Contacts API
+ */
+export interface ContactResponse {
+  success: boolean;
+  contact: Contact;
 }
 
 /**

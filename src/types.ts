@@ -17,26 +17,33 @@ export interface Contact {
 
 /**
  * Response from Sendivent API
+ *
+ * Unified response format: { id, event, status }
+ * The id is a notification tracking UUID.
+ * Query status via GET /v1/notifications/{id}
  */
 export class SendResponse {
-  constructor(
-    public readonly success: boolean,
-    public readonly data?: Array<Record<string, string | boolean>>,
-    public readonly error?: string,
-    public readonly message?: string
-  ) {}
+  /** Notification ID (sequence run UUID) */
+  readonly id: string;
+  /** Event identifier that was triggered */
+  readonly event: string;
+  /** Status: "accepted" means the notification is being processed */
+  readonly status: string;
+  readonly error?: string;
 
-  static from(data: any): SendResponse {
-    return new SendResponse(
-      data.success,
-      data.deliveries,
-      data.error,
-      data.message
-    );
+  constructor(private readonly raw: Record<string, unknown>) {
+    this.id = raw.id as string;
+    this.event = raw.event as string;
+    this.status = raw.status as string;
+    this.error = raw.error as string | undefined;
+  }
+
+  static from(data: Record<string, unknown>): SendResponse {
+    return new SendResponse(data);
   }
 
   isSuccess(): boolean {
-    return this.success;
+    return this.status === 'accepted';
   }
 
   hasError(): boolean {
@@ -44,14 +51,12 @@ export class SendResponse {
   }
 
   toJson(): string {
-    return JSON.stringify(this);
+    return JSON.stringify(this.toObject());
   }
 
-  toObject(): Record<string, any> {
-    const obj: Record<string, any> = { success: this.success };
-    if (this.data !== undefined) obj.data = this.data;
+  toObject(): Record<string, unknown> {
+    const obj: Record<string, unknown> = { id: this.id, event: this.event, status: this.status };
     if (this.error !== undefined) obj.error = this.error;
-    if (this.message !== undefined) obj.message = this.message;
     return obj;
   }
 }

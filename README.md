@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@sendivent/sdk.svg)](https://www.npmjs.com/package/@sendivent/sdk)
 [![License](https://img.shields.io/npm/l/@sendivent/sdk.svg)](https://www.npmjs.com/package/@sendivent/sdk)
 
-Official TypeScript/JavaScript SDK for [Sendivent](https://sendivent.com) - Multi-channel notification platform supporting Email, SMS, Slack, and Push notifications.
+Official TypeScript/JavaScript SDK for [Sendivent](https://sendivent.com) - Multi-channel notification platform supporting Email, SMS, Slack, Push, Telegram, WhatsApp, and Discord.
 
 ## Installation
 
@@ -18,9 +18,10 @@ Requires Node.js 18+ (for native `fetch` support)
 ```typescript
 import { Sendivent } from '@sendivent/sdk';
 
-const sendivent = new Sendivent('test_your_api_key_here', 'welcome');
+const sendivent = new Sendivent('test_your_api_key_here');
 
 await sendivent
+  .event('welcome')
   .to('user@example.com')
   .payload({ name: 'John Doe' })
   .send();
@@ -34,19 +35,23 @@ The `send()` method returns a `SendResponse` object with helper methods:
 
 ```typescript
 const response = await sendivent
+  .event('welcome')
   .to('user@example.com')
   .payload({ name: 'John' })
   .send();
 
 if (response.isSuccess()) {
-  console.log('Sent! Queue IDs:', response.data);
+  console.log(response.id);
+  // "550e8400-e29b-41d4-a716-446655440000"
 } else {
   console.error('Error:', response.error);
 }
 
-// Available properties: success, data, error, message
+// Available properties: id, event, status, error
 // Available methods: isSuccess(), hasError(), toObject(), toJson()
 ```
+
+The `id` is the notification identifier. Notifications are processed asynchronously — use `GET /v1/notifications/{id}` to track message status.
 
 ## Fire-and-Forget
 
@@ -55,6 +60,7 @@ For background sending without waiting for the response:
 ```typescript
 // Fire and forget - returns immediately without waiting
 sendivent
+  .event('welcome')
   .to('user@example.com')
   .payload({ name: 'John' })
   .send()
@@ -110,7 +116,7 @@ await sendivent
 
 ## Key Features
 
-- **Multi-channel** - Email, SMS, Slack, and Push in one API
+- **Multi-channel** - Email, SMS, Slack, Push, Telegram, WhatsApp, and Discord in one API
 - **Fluent API** - Clean, chainable method calls
 - **Type-safe** - Full TypeScript support with type definitions
 - **Fire-and-forget** - Non-blocking sends with promise-based API
@@ -126,6 +132,7 @@ await sendivent
 
 ```typescript
 await sendivent
+  .event('sms-code')
   .channel('sms')
   .to('+1234567890')
   .payload({ code: '123456' })
@@ -136,11 +143,26 @@ await sendivent
 
 ```typescript
 await sendivent
+  .event('payment-received')
   .to('user@example.com')
   .payload({ amount: 100 })
   .overrides({
-    subject: 'Custom Subject',
-    from_email: 'billing@company.com'
+    email: {
+      subject: 'Custom Subject',
+      reply_to: 'billing@company.com'
+    }
+  })
+  .send();
+```
+
+### Brand Overrides
+
+```typescript
+await sendivent
+  .event('welcome')
+  .to('user@example.com')
+  .overrides({
+    brand: { logotype: 'https://example.fi/logo.png' }
   })
   .send();
 ```
@@ -149,6 +171,7 @@ await sendivent
 
 ```typescript
 await sendivent
+  .event('order-confirmation')
   .to('user@example.com')
   .payload({ order_id: '12345' })
   .idempotencyKey('order-12345-confirmation')
@@ -159,6 +182,7 @@ await sendivent
 
 ```typescript
 await sendivent
+  .event('welcome')
   .to('user@example.com')
   .payload({ name: 'Anders' })
   .language('sv')  // Swedish
@@ -171,6 +195,7 @@ Send to configured event listeners without specifying recipients:
 
 ```typescript
 await sendivent
+  .event('system-alert')
   .payload({ severity: 'high', message: 'System alert' })
   .send();
 ```
@@ -193,6 +218,7 @@ const contact: Contact = {
 };
 
 const response: SendResponse = await sendivent
+  .event('welcome')
   .to(contact)
   .payload({ message: 'Hello' })
   .send();

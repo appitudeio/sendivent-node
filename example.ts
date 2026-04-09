@@ -233,7 +233,7 @@ try {
     .send();
 
   if (response.isSuccess()) {
-    console.log('✓ Success! Queue IDs:', response.data);
+    console.log('✓ Success! Notification ID:', response.id);
   } else {
     console.log('✗ Failed:', response.error);
   }

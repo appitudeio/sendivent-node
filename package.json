@@ -1,11 +1,12 @@
 {
   "name": "@sendivent/sdk",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Official TypeScript/JavaScript SDK for Sendivent - Multi-channel notification platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "test": "npm run build && node --test 'tests/*.test.js'",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

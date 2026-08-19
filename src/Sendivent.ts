@@ -1,6 +1,14 @@
 import type { Contact } from './types';
 import { SendResponse } from './types';
 import { Contacts } from './Contacts';
+import { SendiventError } from './errors';
+import { DEFAULT_TIMEOUT_MS, request } from './http';
+import { USER_AGENT } from './version';
+
+export interface SendiventOptions {
+  /** Abort the request after this many milliseconds (default: 30000) */
+  timeoutMs?: number;
+}
 
 export class Sendivent {
   private static readonly API_URLS = {
@@ -19,13 +27,15 @@ export class Sendivent {
   private _overrides: Record<string, unknown> = {};
   private _idempotencyKey?: string;
   private _contacts?: Contacts;
+  private timeoutMs: number;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, options: SendiventOptions = {}) {
     if (!apiKey.match(/^(test_|live_)/)) {
-      throw new Error("API key must start with 'test_' or 'live_'");
+      throw new SendiventError("API key must start with 'test_' or 'live_'");
     }
 
     this.apiKey = apiKey;
+    this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.baseUrl = apiKey.startsWith('live_')
       ? Sendivent.API_URLS.production
       : Sendivent.API_URLS.sandbox;
@@ -36,7 +46,7 @@ export class Sendivent {
    */
   get contacts(): Contacts {
     if (!this._contacts) {
-      this._contacts = new Contacts(this.baseUrl, this.apiKey);
+      this._contacts = new Contacts(this.baseUrl, this.apiKey, this.timeoutMs);
     }
     return this._contacts;
   }
@@ -81,9 +91,15 @@ export class Sendivent {
     return this;
   }
 
+  /**
+   * Send the notification.
+   *
+   * @throws SendiventApiError       The API answered with a non-2xx status
+   * @throws SendiventTransportError The request never reached the API
+   */
   async send(): Promise<SendResponse> {
     if (!this._event) {
-      throw new Error('Event name must be set using event() method');
+      throw new SendiventError('Event name must be set using event() method');
     }
 
     let endpoint = `v1/send/${this._event}`;
@@ -114,36 +130,21 @@ export class Sendivent {
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${this.apiKey}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'Sendivent-Node/1.0',
+      'User-Agent': USER_AGENT,
     };
 
     if (this._idempotencyKey) {
       headers['X-Idempotency-Key'] = this._idempotencyKey;
     }
 
-    try {
-      const response = await fetch(`${this.baseUrl}/${endpoint}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      });
+    const { data } = await request({
+      method: 'POST',
+      url: `${this.baseUrl}/${endpoint}`,
+      headers,
+      body: JSON.stringify(body),
+      timeoutMs: this.timeoutMs,
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          `Sendivent API request failed: ${response.status} - ${
-            data.error || data.message || 'Unknown error'
-          }`
-        );
-      }
-
-      return SendResponse.from(data);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Sendivent API request failed: ${error.message}`);
-      }
-      throw error;
-    }
+    return SendResponse.from(data);
   }
 }

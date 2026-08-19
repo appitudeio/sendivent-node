@@ -1,12 +1,16 @@
 import type { Contact, ContactData, ContactResponse } from './types';
+import { DEFAULT_TIMEOUT_MS, request } from './http';
+import { USER_AGENT } from './version';
 
 export class Contacts {
   private baseUrl: string;
   private apiKey: string;
+  private timeoutMs: number;
 
-  constructor(baseUrl: string, apiKey: string) {
+  constructor(baseUrl: string, apiKey: string, timeoutMs: number = DEFAULT_TIMEOUT_MS) {
     this.baseUrl = baseUrl;
     this.apiKey = apiKey;
+    this.timeoutMs = timeoutMs;
   }
 
   /**
@@ -54,30 +58,25 @@ export class Contacts {
     return this.request('DELETE', `/v1/contacts/${encodeURIComponent(identifier)}/push-tokens`, { token });
   }
 
+  /**
+   * @throws SendiventApiError       The API answered with a non-2xx status
+   * @throws SendiventTransportError The request never reached the API
+   */
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${this.apiKey}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'Sendivent-Node/1.0',
+      'User-Agent': USER_AGENT,
     };
 
-    const options: RequestInit = { method, headers };
+    const { data } = await request({
+      method,
+      url: `${this.baseUrl}/${path.replace(/^\//, '')}`,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      timeoutMs: this.timeoutMs,
+    });
 
-    if (body) {
-      options.body = JSON.stringify(body);
-    }
-
-    const response = await fetch(`${this.baseUrl}/${path.replace(/^\//, '')}`, options);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        `Sendivent API request failed: ${response.status} - ${
-          (data as Record<string, string>).error || (data as Record<string, string>).message || 'Unknown error'
-        }`
-      );
-    }
-
-    return data as T;
+    return (data ?? {}) as T;
   }
 }

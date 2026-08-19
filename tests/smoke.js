@@ -60,6 +60,22 @@ function check(label, ok, detail = '') {
     check('  carries the API message', /Invalid API key/.test(error.message), error.message);
   }
 
+  // 3. The contacts contract — read-only, no writes against the sandbox
+  //
+  // NB: the API currently answers an unknown contact with 500, not 404. That is
+  // a server-side defect (res.error() collides with the project's own ApiError
+  // class, so every res.error() falls through to the generic 500 handler). The
+  // SDK's job is to surface whatever status arrives as a typed error, so that is
+  // what this asserts — it should not go red over an API bug.
+  try {
+    await new Sendivent(key).contacts.get('sdk-smoke-test-missing@example.com');
+    check('missing contact rejects with SendiventApiError', false, 'no error thrown');
+  } catch (error) {
+    check('missing contact rejects with SendiventApiError', error instanceof SendiventApiError);
+    check('  carries the HTTP status', error.status >= 400, `status=${error.status}`);
+    check('  carries the response body', Boolean(error.body), error.body);
+  }
+
   console.log(`\n${failures === 0 ? 'All contract checks passed.' : `${failures} check(s) FAILED.`}`);
   process.exit(failures === 0 ? 0 : 1);
 })();

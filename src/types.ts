@@ -55,15 +55,22 @@ export class SendResponse {
   readonly status: string;
   readonly error?: string;
 
-  constructor(private readonly raw: Record<string, unknown>) {
-    this.id = raw.id as string;
-    this.event = raw.event as string;
-    this.status = raw.status as string;
-    this.error = raw.error as string | undefined;
+  constructor(private readonly raw: Record<string, unknown> = {}) {
+    this.id = typeof raw.id === 'string' ? raw.id : '';
+    this.event = typeof raw.event === 'string' ? raw.event : '';
+    this.status = typeof raw.status === 'string' ? raw.status : '';
+    this.error = typeof raw.error === 'string' ? raw.error : undefined;
   }
 
-  static from(data: Record<string, unknown>): SendResponse {
-    return new SendResponse(data);
+  /**
+   * Build a response object from a decoded body.
+   *
+   * Tolerates undefined and partial bodies on purpose: by the time we get here
+   * the server has already accepted the notification, so parsing must never
+   * turn a successful send into a thrown error for the caller.
+   */
+  static from(data?: Record<string, unknown> | null): SendResponse {
+    return new SendResponse(data ?? {});
   }
 
   isSuccess(): boolean {

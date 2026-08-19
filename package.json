@@ -1,12 +1,14 @@
 {
   "name": "@sendivent/sdk",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Official TypeScript/JavaScript SDK for Sendivent - Multi-channel notification platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "test": "npm run build && node --test tests/*.test.js",
+    "prepublishOnly": "npm run build",
+    "smoke": "npm run build && node tests/smoke.js"
   },
   "keywords": [
     "sendivent",
@@ -22,7 +24,7 @@
     "url": "https://github.com/appitudeio/sendivent-node.git"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

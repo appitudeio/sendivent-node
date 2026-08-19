@@ -224,6 +224,50 @@ const response: SendResponse = await sendivent
   .send();
 ```
 
+## Error Handling
+
+`send()` rejects only when the request fails. A 2xx response is always resolved
+into a `SendResponse`, even if the body is unexpected — the notification was
+already accepted at that point, so parsing never rejects.
+
+```typescript
+import { SendiventApiError, SendiventTransportError } from '@sendivent/sdk';
+
+try {
+  const response = await sendivent.event('receipt').to(email).send();
+} catch (error) {
+  if (error instanceof SendiventApiError) {
+    // The API answered with a non-2xx status
+    if (error.status === 402) {
+      // Quota exhausted
+    }
+    console.error(error.code, error.body);
+  } else if (error instanceof SendiventTransportError) {
+    // Never reached the API — DNS, refused connection, TLS or timeout.
+    // The notification may or may not have been delivered; retry with
+    // idempotencyKey() if you need certainty.
+  }
+}
+```
+
+Both extend `SendiventError`, which extends `Error`.
+
+Requests time out after 30 seconds by default:
+
+```typescript
+const sendivent = new Sendivent(process.env.SENDIVENT_API_KEY!, { timeoutMs: 5000 });
+```
+
+**Sending from inside a transaction?** A notification is rarely worth failing the
+work that triggered it — catch `SendiventError` around the send, or don't await it.
+
+## Development
+
+```bash
+npm install
+npm test
+```
+
 ## Support
 
 - **Documentation:** [docs.sendivent.com](https://docs.sendivent.com)

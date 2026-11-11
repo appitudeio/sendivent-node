@@ -99,6 +99,10 @@ jobs:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Upgrade npm for staged publishing
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm install -g npm@11.19.0
+
       - name: Install dependencies
         if: steps.check_tag.outputs.exists == 'false'
         run: npm install
@@ -107,9 +111,17 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: npm run build
 
-      - name: Publish to NPM
+      - name: Stage publish to NPM
         if: steps.check_tag.outputs.exists == 'false'
-        run: npm publish --access public --provenance
+        run: npm stage publish --access public --provenance
+
+      - name: Note staged publish
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          PKG=$(node -p "require('./package.json').name")
+          MSG="Staged on npm - approve with: npm stage list $PKG then npm stage approve <stage-id> (needs 2FA)"
+          echo "$MSG"
+          echo "$MSG" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create GitHub Release
         if: steps.check_tag.outputs.exists == 'false'
